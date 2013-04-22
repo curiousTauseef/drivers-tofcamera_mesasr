@@ -1,0 +1,12 @@
+prefix=@CMAKE_INSTALL_PREFIX@
+exec_prefix=@CMAKE_INSTALL_PREFIX@
+libdir=${prefix}/lib
+includedir=${prefix}/include
+
+Name: tofcamera_mesa_swissranger-viz
+Description: vizKit plugin for the tofcamera_mesa_swissranger library
+Requires: tofcamera_mesa_swissranger @PKGCONFIG_DEPS@
+Version: @PROJECT_VERSION@
+Libs: -L${libdir} -ltofcamera_mesa_swissranger-viz
+Cflags: -I${includedir}
+
