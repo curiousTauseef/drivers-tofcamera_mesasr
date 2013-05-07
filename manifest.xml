@@ -13,4 +13,11 @@
   <depend package="dummy-dependency-n-1" />
   <depend package="dummy-dependency-n" />
   -->
+  <!-- rock library dependencies -->
+  <depend package="base/types" />
+  <depend package="gui/vizkit" />
+
+
+  <!-- os dependencies -->
+  <rosdep name="osg" />
 </package>
