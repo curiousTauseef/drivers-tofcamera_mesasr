@@ -270,7 +270,7 @@ bool SwissRangerDriver::setAcquisitionMode(int mode)
     if (result < 0)
     {
         LOG_ERROR("SwissRangerDriver: the acquisition mode could not be set. "
-                  "The supported acquistion mode depend on the camera type (SR2/SR3).");
+                  "The supported acquistion mode depend on the camera type (SR3/SR4).");
         return false;
     }
 
@@ -297,6 +297,7 @@ void SwissRangerDriver::warnInternalAcquisitionMode(int mode)
     if ((mode & AM_TOGGLE_FRQ) == AM_TOGGLE_FRQ
             || (mode & AM_SW_ANF) == AM_SW_ANF
             || (mode & AM_RESERVED0) == AM_RESERVED0
+            || (mode & AM_RESERVED1) == AM_RESERVED1
             || (mode & AM_MEDIANCROSS) == AM_MEDIANCROSS)
         LOG_WARN("SwissRangerDriver: according to the device API some acquisition "
                  "modes are just for internal testing and should not be used.");
@@ -469,7 +470,7 @@ bool SwissRangerDriver::setModulationFrequency(ModulationFrq frequency)
     if (result < 0)
     {
         LOG_ERROR("SwissRangerDriver: could not set the modulation frequency. "
-                  "The supported frequencies depend on the camera type (SR2/SR3).");
+                  "The supported frequencies depend on the camera type (SR3/SR4).");
         return false;
     }
 
@@ -487,10 +488,7 @@ bool SwissRangerDriver::setModulationFrequency(ModulationFrq frequency)
 void SwissRangerDriver::warnInternalModulationFrequency(ModulationFrq frequency)
 {
     if (frequency == MF_60MHz
-            || frequency == MF_15MHz
-            || frequency == MF_10MHz
-            || frequency == MF_14_5MHz
-            || frequency == MF_15_5MHz)
+            || frequency == MF_10MHz)
         LOG_WARN("SwissRangerDriver: according to the device API some modulation frequency "
                  "are just for internal testing and should not be used.");
 }
