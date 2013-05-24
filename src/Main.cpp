@@ -94,10 +94,13 @@ int main(int argc, char** argv)
     // --- Modulation frequency
     ModulationFrq modulation_frequency = MF_29MHz ;
     result = driver.getModilationFrequency(modulation_frequency);
-    if (result == true)
-        LOG_INFO("getModilationFrequency: %d", static_cast<int>(modulation_frequency));
+    if (result == true) {
+        std::string freq_str;
+        modulationFreqToStr(modulation_frequency, freq_str);
+        LOG_INFO("getModilationFrequency: %s", freq_str.c_str());
+    }
 
-    result = driver.setModulationFrequency(MF_29MHz);
+    result = driver.setModulationFrequency(MF_15MHz);
     if (result == true)
         LOG_INFO("setModulationFrequency: success");
 
@@ -149,25 +152,6 @@ int main(int argc, char** argv)
     if (result == true)
         LOG_INFO("getAmplitudeImage: success");
 
-    result = driver.close();
-    if (result == true)
-        LOG_INFO("close: success");
-
-
-    // open device over USB
-    if (driver.openUSB(0) == false) {
-        LOG_ERROR("openUSB: error");
-        return false;
-    }
-
-    // --- Modulation frequency
-    modulation_frequency = MF_29MHz ;
-    result = driver.getModilationFrequency(modulation_frequency);
-    if (result == true) {
-        std::string freq_str;
-        modulationFreqToStr(modulation_frequency, freq_str);
-        LOG_INFO("getModilationFrequency: %s", freq_str.c_str());
-    }
     result = driver.close();
     if (result == true)
         LOG_INFO("close: success");
