@@ -123,29 +123,29 @@ int main(int argc, char** argv)
         LOG_INFO("getAmplitudeImage: success");
 
     // --- Confidence Map Image
-    base::samples::frame::Frame  confidence_map_image;
-    result = driver.getConfidenceMapImage(confidence_map_image);
+    base::samples::frame::Frame  confidence_image;
+    result = driver.getConfidenceImage(confidence_image);
     if(result == true)
-        LOG_INFO("getConfidenceMapImage: success");
+        LOG_INFO("getConfidenceImage: success");
 
     // --- Distance in Cartesian
-    base::samples::Pointcloud pointcloud_d;
-    result = driver.getDistanceCartesian(pointcloud_d, CP_DOUBLE);
+    base::samples::Pointcloud coordinates_d;
+    result = driver.get3DCoordinates(coordinates_d, CP_DOUBLE);
+    if (result == true)
+        LOG_INFO("get3DCoordinates: success");
+
+    base::samples::Pointcloud coordinates_f;
+    result = driver.get3DCoordinates(coordinates_f, CP_FLOAT);
     if (result == true)
         LOG_INFO("getCoordinate: success");
 
-    base::samples::Pointcloud pointcloud_f;
-    result = driver.getDistanceCartesian(pointcloud_f, CP_FLOAT);
-    if (result == true)
-        LOG_INFO("getCoordinate: success");
-
-    base::samples::Pointcloud pointcloud_i;
-    result = driver.getDistanceCartesian(pointcloud_i, CP_UINT);
+    base::samples::Pointcloud coordinates_ui;
+    result = driver.get3DCoordinates(coordinates_ui, CP_UINT);
     if (result == true)
         LOG_INFO("getCoordinate: success");
 
     std::cout << "Distance in Cartesian" << std::endl;
-    printPointCloud(pointcloud_d, pointcloud_f, pointcloud_i);
+    printPointCloud(coordinates_d, coordinates_f, coordinates_ui);
 
     base::samples::frame::Frame frame_ampl;
     result = driver.getAmplitudeImage(frame_ampl);

@@ -539,9 +539,9 @@ bool SwissRangerDriver::acquire()
     return true;
 }
 
-bool SwissRangerDriver::getDistanceCartesian(base::samples::Pointcloud &pointcloud, const TMS_CoordPercision persicion)
+bool SwissRangerDriver::get3DCoordinates(base::samples::Pointcloud &pointcloud, const TMS_CoordPercision persicion)
 {
-    LOG_DEBUG("SwissRangerDriver: getDistanceCartesian");
+    LOG_DEBUG("SwissRangerDriver: get3DCoordinates");
 
     if (image_buffer_ == 0)
     {
@@ -568,7 +568,7 @@ bool SwissRangerDriver::getDistanceCartesian(base::samples::Pointcloud &pointclo
                 return false;
             }
 
-            for (unsigned int i = 0; i < (rows_ * cols_); i += 3)
+            for (unsigned int i = 0; i < (rows_ * cols_ * 3); i += 3)
             {
                 pointcloud.points.push_back(base::Point(buf[i], buf[i+1], buf[i+2]));
             }
@@ -592,7 +592,7 @@ bool SwissRangerDriver::getDistanceCartesian(base::samples::Pointcloud &pointclo
                 return false;
             }
 
-            for (unsigned int i = 0; i < (rows_ * cols_); i += 3)
+            for (unsigned int i = 0; i < (rows_ * cols_ * 3); i += 3)
             {
                 pointcloud.points.push_back(base::Point(buf[i], buf[i+1], buf[i+2]));
             }
@@ -615,7 +615,7 @@ bool SwissRangerDriver::getDistanceCartesian(base::samples::Pointcloud &pointclo
                 return false;
             }
 
-            for (unsigned int i = 0; i < (rows_ * cols_); i += 3)
+            for (unsigned int i = 0; i < (rows_ * cols_ * 3); i += 3)
             {
                 pointcloud.points.push_back(base::Point(buf[i], buf[i+1], (unsigned short)buf[i+2]));
             }
@@ -672,20 +672,20 @@ bool SwissRangerDriver::getAmplitudeImage(base::samples::frame::Frame &frame)
     return true;
 }
 
-bool SwissRangerDriver::getConfidenceMapImage(base::samples::frame::Frame &frame)
+bool SwissRangerDriver::getConfidenceImage(base::samples::frame::Frame &frame)
 {
-    LOG_DEBUG("SwissRangerDriver: getConfidenceMapImage");
+    LOG_DEBUG("SwissRangerDriver: getConfidenceImage");
 
     if (img_entry_array_ == 0 || img_indexes_.at(ImgEntry::IT_CONF_MAP) == -1)
     {
-        LOG_ERROR("SwissRangerDriver: the confidence map image is not available");
+        LOG_ERROR("SwissRangerDriver: the confidence image is not available");
         return false;
     }
 
     bool result = getImage(frame, img_indexes_.at(ImgEntry::IT_CONF_MAP));
     if (result == false)
     {
-        LOG_ERROR("SwissRangerDriver:: the confidence map image can not be accessed");
+        LOG_ERROR("SwissRangerDriver:: the confidence image can not be accessed");
         return false;
     }
 

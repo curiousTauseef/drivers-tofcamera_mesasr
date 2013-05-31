@@ -195,19 +195,19 @@ namespace tofcamera_mesa_swissranger
              * The greater z-value represents the higher confidence.
              * \return
              */
-            bool getConfidenceMapImage(base::samples::frame::Frame &frame);
+            bool getConfidenceImage(base::samples::frame::Frame &frame);
 
             bool isConfidenceImageAvailable();
 
             /**
              * \short Returns the distance measurement in cartesian coordinaten.
-             * \brief CP_DOUBLE and CP_FLOAT returns the distance in meter, CP_UINT in millimeter
-             * According the sensor API the CP_DOUBLE and CP_FLOAT have the same precision.
-             * Accordint to sensor API: Z increases away from the camera, Y upwards,
+             * \brief According the sensor API the CP_DOUBLE and CP_FLOAT have the same precision.
+             * Z increases away from the camera, Y upwards,
              * and X to the left, from the camera's viewpoint, i.e. a Right Handed coordinate system.
              * The origin (0,0,0) is the intersection of the optical axis and the front face of the camera.
+             * \note CP_DOUBLE and CP_FLOAT return the distance in meter, CP_UINT in millimeter
              */
-            bool getDistanceCartesian(base::samples::Pointcloud &pointcloud, const TMS_CoordPercision persicion);
+            bool get3DCoordinates(base::samples::Pointcloud &pointcloud, const TMS_CoordPercision persicion);
 
 
         private:
