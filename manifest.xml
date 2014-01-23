@@ -15,7 +15,7 @@
   -->
   <!-- rock library dependencies -->
   <depend package="base/types" />
-  <depend package="gui/vizkit" />
+  <depend package="gui/vizkit" optional="1"/>
   <depend package="slam/envire" />
 
   <!-- os dependencies -->
