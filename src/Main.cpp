@@ -2,13 +2,13 @@
 #include <base/logging.h>
 #include "SwissRangerDriver.hpp"
 #include "SwissRangeDriverLookUp.hpp"
+#include <bitset>
 
 using namespace tofcamera_mesa_swissranger;
 
-void printPointCloud(base::samples::Pointcloud &pointcloud);
-void printPointCloud(base::samples::Pointcloud &pointcloud_1,
-                     base::samples::Pointcloud &pointcloud_2,
-                     base::samples::Pointcloud &pointcloud_3);
+void printPointCloud(std::vector<base::Vector3d> &point_d,
+                     std::vector<Eigen::Matrix<float, 3, 1, Eigen::DontAlign> > &points_f,
+                     std::vector<Eigen::Matrix<short, 3, 1, Eigen::DontAlign> > &points_s);
 
 int main(int argc, char** argv)
 {
@@ -111,46 +111,41 @@ int main(int argc, char** argv)
         LOG_INFO("read: success");
 
     // --- Distance Image
-    base::samples::frame::Frame distance_image;
-    result = driver.getDistanceImage(distance_image);
+    std::vector<uint16_t> distance_image;
+    result = driver.getDistanceImage(&distance_image);
     if(result == true)
         LOG_INFO("getDistanceImage: success");
 
     // --- Amplitude Image
-    base::samples::frame::Frame amplitude_image;
-    result = driver.getAmplitudeImage(amplitude_image);
+    std::vector<uint16_t> amplitude_image;
+    result = driver.getAmplitudeImage(&amplitude_image);
     if(result == true)
         LOG_INFO("getAmplitudeImage: success");
 
     // --- Confidence Map Image
-    base::samples::frame::Frame  confidence_image;
-    result = driver.getConfidenceImage(confidence_image);
+    std::vector<uint16_t>  confidence_image;
+    result = driver.getConfidenceImage(&confidence_image);
     if(result == true)
         LOG_INFO("getConfidenceImage: success");
 
     // --- Distance in Cartesian
-    base::samples::Pointcloud coordinates_d;
-    result = driver.get3DCoordinates(coordinates_d, CP_DOUBLE);
+    std::vector<base::Vector3d> points_d;
+    result = driver.getPointcloudDouble(points_d);
     if (result == true)
-        LOG_INFO("get3DCoordinates: success");
+        LOG_INFO("getPointcloudDouble: success");
 
-    base::samples::Pointcloud coordinates_f;
-    result = driver.get3DCoordinates(coordinates_f, CP_FLOAT);
+    std::vector<Eigen::Matrix<float, 3, 1, Eigen::DontAlign> > points_f;
+    result = driver.getPointcloudFloat(points_f);
     if (result == true)
-        LOG_INFO("getCoordinate: success");
+        LOG_INFO("getPointcloudFloat: success");
 
-    base::samples::Pointcloud coordinates_ui;
-    result = driver.get3DCoordinates(coordinates_ui, CP_UINT);
+    std::vector<Eigen::Matrix<short, 3, 1, Eigen::DontAlign> > points_s;
+    result = driver.getPointcloudShort(points_s);
     if (result == true)
-        LOG_INFO("getCoordinate: success");
+        LOG_INFO("getPointcloudShort: success");
 
     std::cout << "Distance in Cartesian" << std::endl;
-    printPointCloud(coordinates_d, coordinates_f, coordinates_ui);
-
-    base::samples::frame::Frame frame_ampl;
-    result = driver.getAmplitudeImage(frame_ampl);
-    if (result == true)
-        LOG_INFO("getAmplitudeImage: success");
+    printPointCloud(points_d, points_f, points_s);
 
     result = driver.close();
     if (result == true)
@@ -159,36 +154,23 @@ int main(int argc, char** argv)
     return 0;
 }
 
-void printPointCloud(base::samples::Pointcloud &pointcloud)
+void printPointCloud(std::vector<base::Vector3d> &point_d,
+                     std::vector<Eigen::Matrix<float, 3, 1, Eigen::DontAlign> > &points_f,
+                     std::vector<Eigen::Matrix<short, 3, 1, Eigen::DontAlign> > &points_s)
 {
-    if (pointcloud.points.size() > 10)
+    if (point_d.size() > 10 && points_f.size() > 10 && points_s.size() > 10)
     {
         for (unsigned int i = 0; i < 10; ++i)
         {
-            std::cout << pointcloud.points.at(i).x() << " "
-                      << pointcloud.points.at(i).y() << " "
-                      << pointcloud.points.at(i).z() << " " << std::endl;
-        }
-    }
-}
-
-void printPointCloud(base::samples::Pointcloud &pointcloud_1,
-                     base::samples::Pointcloud &pointcloud_2,
-                     base::samples::Pointcloud &pointcloud_3)
-{
-    if (pointcloud_1.points.size() > 10 && pointcloud_2.points.size() > 10 && pointcloud_3.points.size() > 10)
-    {
-        for (unsigned int i = 0; i < 10; ++i)
-        {
-            std::cout << pointcloud_1.points.at(i).x() << ", "
-                      << pointcloud_2.points.at(i).x() << ", "
-                      << pointcloud_3.points.at(i).x() << "; \t "
-                      << pointcloud_1.points.at(i).y() << ", "
-                      << pointcloud_2.points.at(i).y() << ", "
-                      << pointcloud_3.points.at(i).y() << "; \t "
-                      << pointcloud_1.points.at(i).z() << ", "
-                      << pointcloud_2.points.at(i).z() << ", "
-                      << pointcloud_3.points.at(i).z() << ";" << std::endl;
+            std::cout << point_d.at(i).x() << ", "
+                      << points_f.at(i).x() << ", "
+                      << points_s.at(i).x() << "; \t "
+                      << point_d.at(i).y() << ", "
+                      << points_f.at(i).y() << ", "
+                      << points_s.at(i).y() << "; \t "
+                      << point_d.at(i).z() << ", "
+                      << points_f.at(i).z() << ", "
+                      << (unsigned short)points_s.at(i).z() << ";" << std::endl;
         }
     }
 }

@@ -3,11 +3,10 @@
 using namespace tofcamera_mesa_swissranger;
 
 SwissRangerDriver::SwissRangerDriver()
-    : camera_handle_(0), is_open_(false), img_entry_array_(0), img_indexes_(11, -1),
+    : camera_handle_(0), is_open_(false), img_entry_array_(0), img_indexes_(ImgEntry::IT_LAST + 1, -1),
       timeout_(TIMEOUT), image_buffer_(0)
 {
     LOG_DEBUG("SwissRangerDriver: constructor");
-
 }
 
 SwissRangerDriver::~SwissRangerDriver()
@@ -129,41 +128,40 @@ bool SwissRangerDriver::initImageList()
         switch (img_entry_array_[i].imgType)
         {
         case ImgEntry::IT_DISTANCE:
-            img_indexes_.at(0) = i;
+            img_indexes_.at(ImgEntry::IT_DISTANCE) = i;
             break;
         case ImgEntry::IT_AMPLITUDE:
-            img_indexes_.at(1) = i;
+            img_indexes_.at(ImgEntry::IT_AMPLITUDE) = i;
             break;
         case ImgEntry::IT_INTENSITY:
-            img_indexes_.at(2) = i;
+            img_indexes_.at(ImgEntry::IT_INTENSITY) = i;
             break;
         case ImgEntry::IT_TAP0:
-            img_indexes_.at(3) = i;
+            img_indexes_.at(ImgEntry::IT_TAP0) = i;
             break;
         case ImgEntry::IT_TAP1:
-            img_indexes_.at(4) = i;
+            img_indexes_.at(ImgEntry::IT_TAP1) = i;
             break;
         case ImgEntry::IT_TAP2:
-            img_indexes_.at(5) = i;
+            img_indexes_.at(ImgEntry::IT_TAP2) = i;
             break;
         case ImgEntry::IT_TAP3:
-            img_indexes_.at(6) = i;
+            img_indexes_.at(ImgEntry::IT_TAP3) = i;
             break;
         case ImgEntry::IT_SUM_DIFF:
-            img_indexes_.at(7) = i;
+            img_indexes_.at(ImgEntry::IT_SUM_DIFF) = i;
             break;
         case ImgEntry::IT_CONF_MAP:
-            img_indexes_.at(8) = i;
+            img_indexes_.at(ImgEntry::IT_CONF_MAP) = i;
             break;
         case ImgEntry::IT_UNDEFINED:
-            img_indexes_.at(9) = i;
+            img_indexes_.at(ImgEntry::IT_UNDEFINED) = i;
             break;
         case ImgEntry::IT_LAST:
-            img_indexes_.at(10) = i;
+            img_indexes_.at(ImgEntry::IT_LAST) = i;
             break;
         default:
             break;
-
         }
     }
 
@@ -524,6 +522,13 @@ bool SwissRangerDriver::setAutoExposure(unsigned char min_int_time, unsigned cha
     return true;
 }
 
+bool SwissRangerDriver::isConfidenceImageAvailable()
+{
+    if (img_indexes_.at(ImgEntry::IT_CONF_MAP) == -1)
+        return false;
+    else
+        return true;
+}
 
 bool SwissRangerDriver::acquire()
 {
@@ -539,99 +544,7 @@ bool SwissRangerDriver::acquire()
     return true;
 }
 
-bool SwissRangerDriver::get3DCoordinates(base::samples::Pointcloud &pointcloud, const TMS_CoordPercision persicion)
-{
-    LOG_DEBUG("SwissRangerDriver: get3DCoordinates");
-
-    if (image_buffer_ == 0)
-    {
-        LOG_ERROR("SwissRangerDriver: failed to get image.");
-        return false;
-    }
-
-    switch (persicion)
-    {
-    case CP_DOUBLE:
-        {
-            int pitch = 3 * sizeof(double);
-            double* buf = (double*) image_buffer_;
-
-            // transfrom the distance image from spherical coordinates to cartesian coordinates
-            // coordinate in meter
-            int result = SR_CoordTrfDbl(camera_handle_,
-                    &buf[0], &buf[1], &buf[2],
-                    pitch, pitch, pitch);
-
-            if (result < 0)
-            {
-                LOG_ERROR("SwissRangerDriver: could not transform the distance image to cartesian coordinate with double percistion.");
-                return false;
-            }
-
-            for (unsigned int i = 0; i < (rows_ * cols_ * 3); i += 3)
-            {
-                pointcloud.points.push_back(base::Point(buf[i], buf[i+1], buf[i+2]));
-            }
-        }
-
-       break;
-   case CP_FLOAT:
-        {
-            int pitch = 3 * sizeof(float);
-            float* buf = (float*) image_buffer_;
-
-            // transfrom the distance image from spherical coordinates to cartesian coordinates
-            // coordinate in meter
-            int result = SR_CoordTrfFlt(camera_handle_,
-                    &buf[0], &buf[1], &buf[2],
-                    pitch, pitch, pitch);
-
-            if (result < 0)
-            {
-                LOG_ERROR("SwissRangerDriver: could not transform the distance image to cartesian coordiante with float percistion.");
-                return false;
-            }
-
-            for (unsigned int i = 0; i < (rows_ * cols_ * 3); i += 3)
-            {
-                pointcloud.points.push_back(base::Point(buf[i], buf[i+1], buf[i+2]));
-            }
-        }
-        break;
-   case CP_UINT:
-        {
-            int pitch = 2 * sizeof(short) + sizeof(unsigned short);
-            short* buf = (short*) image_buffer_;
-
-            // transfrom the distance image from spherical coordinates to cartesian coordinates
-            // coordinate in mm
-            int result = SR_CoordTrfUint16(camera_handle_,
-                                           &buf[0], &buf[1], (unsigned short*) &buf[2],
-                                           pitch, pitch, pitch);
-
-            if (result < 0)
-            {
-                LOG_ERROR("SwissRangerDriver: could not transform the distance image to cartesian coordiante with uint percistion.");
-                return false;
-            }
-
-            for (unsigned int i = 0; i < (rows_ * cols_ * 3); i += 3)
-            {
-                pointcloud.points.push_back(base::Point(buf[i], buf[i+1], (unsigned short)buf[i+2]));
-            }
-        }
-        break;
-   default:
-        LOG_ERROR("SwissRangerDriver: unknown percision");
-        break;
-   }
-
-   pointcloud.time = base::Time::now();
-
-   return true;
-}
-
-bool SwissRangerDriver::getDistanceImage(base::samples::frame::Frame &frame)
+bool SwissRangerDriver::getDistanceImage(std::vector<uint16_t> *image)
 {
     LOG_DEBUG("SwissRangerDriver: getDistanceImage");
 
@@ -641,17 +554,18 @@ bool SwissRangerDriver::getDistanceImage(base::samples::frame::Frame &frame)
         return false;
     }
 
-    bool result = getImage(frame, img_indexes_.at(ImgEntry::IT_DISTANCE));
-    if (result == false)
-    {
-        LOG_ERROR("SwissRangerDriver:: the distance image can not be accessed");
+    // get distance image data from device
+    if (getImage(img_indexes_.at(ImgEntry::IT_DISTANCE), image) == false)
         return false;
-    }
+
+    // the distance data contain reserved pixels
+    // remove them from the frame
+    removeReservedBits(image);
 
     return true;
 }
 
-bool SwissRangerDriver::getAmplitudeImage(base::samples::frame::Frame &frame)
+bool SwissRangerDriver::getAmplitudeImage(std::vector<uint16_t> *image)
 {
     LOG_DEBUG("SwissRangerDriver: getAmplitudeImage");
 
@@ -661,18 +575,18 @@ bool SwissRangerDriver::getAmplitudeImage(base::samples::frame::Frame &frame)
         return false;
     }
 
-    bool result = getImage(frame, img_indexes_.at(ImgEntry::IT_AMPLITUDE));
-
-    if (result == false)
-    {
-        LOG_ERROR("SwissRangerDriver:: the amplitude image can not be accessed");
+    // get amplitude image data from device
+    if (getImage(img_indexes_.at(ImgEntry::IT_AMPLITUDE), image) == false)
         return false;
-    }
+
+    // the amplitude data contain reserved pixels
+    // remove them from the frame
+    removeReservedBits(image);
 
     return true;
 }
 
-bool SwissRangerDriver::getConfidenceImage(base::samples::frame::Frame &frame)
+bool SwissRangerDriver::getConfidenceImage(std::vector<uint16_t> *image)
 {
     LOG_DEBUG("SwissRangerDriver: getConfidenceImage");
 
@@ -682,37 +596,152 @@ bool SwissRangerDriver::getConfidenceImage(base::samples::frame::Frame &frame)
         return false;
     }
 
-    bool result = getImage(frame, img_indexes_.at(ImgEntry::IT_CONF_MAP));
-    if (result == false)
-    {
-        LOG_ERROR("SwissRangerDriver:: the confidence image can not be accessed");
+    // get confidence image data from device
+    if (getImage(img_indexes_.at(ImgEntry::IT_CONF_MAP), image) == false)
         return false;
+
+    return true;
+}
+
+bool SwissRangerDriver::getImage(int image_index, std::vector<uint16_t> *buffer)
+{
+    LOG_DEBUG("SwissRangerDriver: getImage");
+
+    // get the pointer to the image buffer of required image type
+    uint16_t *data_ptr = (unsigned short*) img_entry_array_[image_index].data;
+    if (data_ptr == 0)
+    {
+        LOG_ERROR("Swissranger: can not access the image");
+        return false;
+    }
+
+    // the size of image buffer
+    uint32_t data_length = (uint32_t)img_entry_array_[image_index].width
+                            * (uint32_t)img_entry_array_[image_index].height;
+
+    // copy the image data into buffer
+    *buffer = std::vector<uint16_t>(data_ptr, data_ptr + data_length);
+
+    return true;
+}
+
+void SwissRangerDriver::removeReservedBits(std::vector<uint16_t> *buffer)
+{
+    // remove last two least significants bits
+    for (unsigned int i = 0; i < buffer->size(); ++i)
+    {
+        buffer->at(i) = buffer->at(i) >> 2;
+    }
+}
+
+bool SwissRangerDriver::getPointcloudDouble(std::vector<base::Vector3d> &points)
+{
+    LOG_DEBUG("SwissRangerDriver: getPointcloudDouble");
+
+    points.clear();
+
+    if (image_buffer_ == 0)
+    {
+        LOG_ERROR("SwissRangerDriver: failed to get pointcloud double.");
+        return false;
+    }
+
+    int pitch = 3 * sizeof(double);
+    double* buf = (double*) image_buffer_;
+
+    // transfrom the distance image from spherical coordinates to cartesian coordinates
+    // coordinate in meter
+    int result = SR_CoordTrfDbl(camera_handle_,
+            &buf[0], &buf[1], &buf[2],
+            pitch, pitch, pitch);
+
+    if (result < 0)
+    {
+        LOG_ERROR("SwissRangerDriver: could not transform the distance image to cartesian coordinate with double precision.");
+        return false;
+    }
+
+    points.reserve(rows_ * cols_);
+
+    for (unsigned int i = 0; i < (rows_ * cols_ * 3); i += 3)
+    {
+        points.push_back(base::Vector3d(buf[i], buf[i+1], buf[i+2]));
     }
 
     return true;
 }
 
-bool SwissRangerDriver::isConfidenceImageAvailable()
+bool SwissRangerDriver::getPointcloudFloat(std::vector<Eigen::Matrix<float, 3, 1, Eigen::DontAlign> > &points)
 {
-    if (img_indexes_.at(ImgEntry::IT_CONF_MAP) == -1)
+    LOG_DEBUG("SwissRangerDriver: getPointcloudFloat");
+
+    points.clear();
+
+    if (image_buffer_ == 0)
+    {
+        LOG_ERROR("SwissRangerDriver: failed to get pointcloud float.");
         return false;
-    else
-        return true;
+    }
+
+    int pitch = 3 * sizeof(float);
+    float* buf = (float*) image_buffer_;
+
+    // transfrom the distance image from spherical coordinates to cartesian coordinates
+    // coordinate in meter
+    int result = SR_CoordTrfFlt(camera_handle_,
+            &buf[0], &buf[1], &buf[2],
+            pitch, pitch, pitch);
+
+    if (result < 0)
+    {
+        LOG_ERROR("SwissRangerDriver: could not transform the distance image to cartesian coordiante with float precision.");
+        return false;
+    }
+
+    points.reserve(rows_ * cols_);
+
+    for (unsigned int i = 0; i < (rows_ * cols_ * 3); i += 3)
+    {
+        points.push_back(Eigen::Matrix<float, 3, 1, Eigen::DontAlign>(buf[i], buf[i+1], buf[i+2]));
+    }
+
+    return true;
 }
 
-bool SwissRangerDriver::getImage(base::samples::frame::Frame &frame, const int index)
+bool SwissRangerDriver::getPointcloudShort(std::vector<Eigen::Matrix<short, 3, 1, Eigen::DontAlign> > &points)
 {
-    unsigned short* data = (unsigned short*)img_entry_array_[index].data;
-    if (data == 0)
+    LOG_DEBUG("SwissRangerDriver: getPointcloudShort");
+
+    points.clear();
+
+    if (image_buffer_ == 0)
+    {
+        LOG_ERROR("SwissRangerDriver: failed to get pointcloud short.");
         return false;
+    }
 
-    unsigned int width = (unsigned int)img_entry_array_[index].width;
-    unsigned int height = (unsigned int)img_entry_array_[index].height;
+    int pitch = 2 * sizeof(short) + sizeof(unsigned short);
+    short* buf = (short*) image_buffer_;
 
-    frame.init(width, height, 16);
-    frame.setImage((char*) data, (width * height) * 2);
+    // transfrom the distance image from spherical coordinates to cartesian coordinates
+    // coordinate in mm
+    // note: x, y are short and z is ushort
+    int result = SR_CoordTrfUint16(camera_handle_,
+                                   &buf[0], &buf[1], (unsigned short*) &buf[2],
+                                   pitch, pitch, pitch);
 
-    frame.time = base::Time::now();
+    if (result < 0)
+    {
+        LOG_ERROR("SwissRangerDriver: could not transform the distance image to cartesian coordiante with short precision.");
+        return false;
+    }
+
+    points.reserve(rows_ * cols_);
+
+    for (unsigned int i = 0; i < (rows_ * cols_ * 3); i += 3)
+    {
+        points.push_back(Eigen::Matrix<short, 3, 1, Eigen::DontAlign>(buf[i], buf[i+1], (unsigned short)buf[i+2]));
+    }
 
     return true;
 }

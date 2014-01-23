@@ -7,10 +7,10 @@
 #include <vector>
 #include <algorithm>
 #include <base/logging.h>
-#include <base/samples/pointcloud.h>
-#include <base/samples/frame.h>
 #include <boost/lexical_cast.hpp>
 #include <boost/range.hpp>
+
+#include <base/eigen.h>
 
 #include "libMesaSR.h"
 
@@ -21,7 +21,7 @@
 
 namespace tofcamera_mesa_swissranger
 {
-    
+
     /**
      * \short This class implements a driver for the TOF-camera MESA Swissranger
      * \author Anna Born <anna.born@dfki.de>
@@ -171,43 +171,64 @@ namespace tofcamera_mesa_swissranger
                                  unsigned char percent_over_pos, unsigned char desired_pos);
 
             /**
-             * \short Triggers the camera acqusition
+             * \short the camera acqusition
              * \return
              */
             bool acquire();
 
+            bool isConfidenceImageAvailable();
+
             /**
-             * \short Returns the raw distance image
-             * \brief (s. sensor manual for composition of distance value)
+             * \short Returns the raw distance image data
+             * \brief the data are stored row-major with row size getRows()
+             * buffer length is getRows()*getCols()
+             * (s. sensor manual for arrangement of distance value)
              */
-            bool getDistanceImage(base::samples::frame::Frame &frame);
+            bool getDistanceImage(std::vector<uint16_t> *image);
 
             /**
              * \short Returns the amplitude image
-             * \brief (s. sensor manual for composition of amplitude value)
+             * \brief The data storage is similar to distance image.
+             * (s. sensor manual for arrangement of amplitude value)
              * \return
              */
-            bool getAmplitudeImage(base::samples::frame::Frame &frame);
+            bool getAmplitudeImage(std::vector<uint16_t> *image);
 
             /**
              * \short Returns the confidence map image
              * \brief The value represents the reliability of the distance measurement.
              * The greater z-value represents the higher confidence.
+             * The data storage is similar to distance image.
              * \return
              */
-            bool getConfidenceImage(base::samples::frame::Frame &frame);
-
-            bool isConfidenceImageAvailable();
+            bool getConfidenceImage(std::vector<uint16_t> *image);
 
             /**
-             * \short Returns the distance measurement in cartesian coordinaten.
-             * \brief According the sensor API the CP_DOUBLE and CP_FLOAT have the same precision.
-             * Z increases away from the camera, Y upwards,
-             * and X to the left, from the camera's viewpoint, i.e. a Right Handed coordinate system.
+             * \short return the pointcloud in meter in the double representation
+             * \brief Z increases away from the camera, Y upwards,
+             * and X to the left, from the camera's viewpoint, a Right Handed coordinate system.
              * The origin (0,0,0) is the intersection of the optical axis and the front face of the camera.
-             * \note CP_DOUBLE and CP_FLOAT return the distance in meter, CP_UINT in millimeter
+             * \param[out] points
+             * \return
+             * \note the data in double and in float representation have the same precision
              */
-            bool get3DCoordinates(base::samples::Pointcloud &pointcloud, const TMS_CoordPercision persicion);
+            bool getPointcloudDouble(std::vector<base::Vector3d> &points);
+
+            /**
+             * \short return the pointcloud in meter in the float representation
+             * \param[out] points
+             * \return
+             * \note the data in double and in float representation have the same precision
+             */
+            bool getPointcloudFloat(std::vector<Eigen::Matrix<float, 3, 1, Eigen::DontAlign> > &points);
+
+            /**
+             * \short return the pointcloud in millimeter in the short representation
+             * \brief the x and y coordinates are short, z coordinate is unsigned short
+             * \param[out] points
+             * \return
+             */
+            bool getPointcloudShort(std::vector<Eigen::Matrix<short, 3, 1, Eigen::DontAlign> > &points);
 
 
         private:
@@ -221,7 +242,7 @@ namespace tofcamera_mesa_swissranger
 
             /**
              * \brief holds indexes to the images in img_entry_array_
-             * The values in img_indexes are corresponded to the type of enum ImgType (s. SwissRanger API)
+             * The values in img_indexes correspond with enum ImgType (s. SwissRanger API)
              *
              * img_indexes_[0] - index to the image of the type IT_DISTANCE
              * img_indexes_[1] - index to the image of the type IT_AMPLITUDE
@@ -229,8 +250,7 @@ namespace tofcamera_mesa_swissranger
              * img_indexes_[8] - index to the image of the type IT_CONF_MAP
              * ...
              *
-             * If some value in img_indexes is -1, there is no index of the image with the corresponded type.
-             * Therefore there is no image in img_entry_array_ of this type.
+             * Value of -1 means there is no image with the corresponded type.
              */
             std::vector<int> img_indexes_;
 
@@ -255,24 +275,42 @@ namespace tofcamera_mesa_swissranger
              * \brief update the image information from the device
              * \return
              * \note this function should be called after
-             * the changes in acquisition mode applied
+             * the changes in acquisition mode have applied
              */
             bool initImageList();
 
             /**
-             * \short warn if the acquisition mode is just for internal testing
+             * \short warn if the used acquisition mode is just for internal testing
              * \brief s. API of the device
-             * \param mode
+             * \param[in] mode
              */
             void warnInternalAcquisitionMode(int mode);
 
             /**
-             * \short warn if the modulation frequency is just for internal testing
+             * \short warn if the used modulation frequency is just for internal testing
+             * \param[in]
              * \brief s. API of the device
              */
             void warnInternalModulationFrequency(ModulationFrq frequency);
 
-            bool getImage(base::samples::frame::Frame &frame, const int index);
+
+            /**
+             * \short get the device image data
+             * \param[in] image_index - the index of image in img_entry_array_;
+             *  can be found out through img_indexes_ and image type
+             * \param[out] buffer
+             *
+             */
+            bool getImage(int image_index, std::vector<uint16_t> *buffer);
+
+            /**
+             * \short remove the reserved bits from the data
+             * \brief The distance and amplitude data are represented by most significant 14 bits.
+             * Two least significant bist are reserved.
+             * \param[out]
+             */
+            void removeReservedBits(std::vector<uint16_t> *buffer);
+
 	};
 
 } // end namespace tofcamera_mesa_swissranger

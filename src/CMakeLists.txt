@@ -1,7 +1,7 @@
 # Library
 rock_library(${PROJECT_NAME}
     SOURCES SwissRangerDriver.cpp
-    HEADERS SwissRangerDriver.hpp SwissRangeDriverLookUp.hpp SwissRangerTypes.hpp
+    HEADERS SwissRangerDriver.hpp SwissRangeDriverLookUp.hpp SwissRangerTypes.hpp TOFScan.hpp Filter.hpp
     DEPS_PKGCONFIG base-types base-lib)
 target_link_libraries(${PROJECT_NAME} mesasr)
 
