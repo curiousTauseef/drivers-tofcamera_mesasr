@@ -32,7 +32,9 @@ namespace tofcamera_mesa_swissranger
         if ((mode & AM_DENOISE_ANF) == AM_DENOISE_ANF)
             mode_str_list.push_back("3x3 hardware adaptive neighborhood filter");
         if ((mode & AM_MEDIANCROSS) == AM_MEDIANCROSS)
-            mode_str_list.push_back(" 3x3 cross-median filter");
+            mode_str_list.push_back("3x3 cross-median filter");
+        if ((mode & AM_NO_AMB) == AM_NO_AMB)
+            mode_str_list.push_back("no ambiguity mode");
     }
 
     inline static void acquireModesToStr(int mode, std::string &mode_str)

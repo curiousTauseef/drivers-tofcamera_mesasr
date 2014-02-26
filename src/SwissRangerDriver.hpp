@@ -147,6 +147,18 @@ namespace tofcamera_mesa_swissranger
             bool getIntegrationTime(unsigned char &time);
 
             /**
+             * \short Set/turn on/off dual integration time. (s. sensor API)
+             * \brief Useful to reduce the number of saturated pixels.
+             * Reduce the frame rate, since two images are captured for producing
+             * final image.
+             * \param ratio - ratio of the upper and lower integration time. 
+             * The ratio is a percentage value from 0 to 100. If 0, the function is turned off.
+             * 
+             * \note this function is avaliable since the library version 1.14.747
+             */
+            bool setDualIntegrationTime(int ratio);
+
+            /**
              * \short Sets the amplitude threshold
              * \brief It the amplitude value is lower than threshold, than the distance value will be set to 0.
              * Default value is 0.

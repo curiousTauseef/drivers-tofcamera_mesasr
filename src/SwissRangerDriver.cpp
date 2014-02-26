@@ -405,7 +405,7 @@ bool SwissRangerDriver::setIntegrationTime(unsigned char time)
     // result value indicate the number of bytes transferred to or from the camera during an operation
     if (result < 2)
     {
-        LOG_ERROR("SwissRangerDriver: could not set the integration time.");
+        LOG_ERROR("SwissRangerDriver: could not set the integration time. Check the time value. It should be from 0 to 255.");
         return false;
     }
 
@@ -424,6 +424,22 @@ bool SwissRangerDriver::getIntegrationTime(unsigned char &time)
     }
 
     time = result;
+
+    return true;
+}
+
+bool SwissRangerDriver::setDualIntegrationTime(int ratio)
+{
+    LOG_DEBUG("SwissRangerDriver: setDualIntegrationTime");
+
+    int result = SR_SetDualIntegrationTime(camera_handle_, ratio);
+
+    // TODO: check the value
+    if (result < 2)
+    {
+        LOG_ERROR("SwissRangerDriver: could not set the dual integration time. Check the ratio value. It should be from 0 to 100.");
+        return false;
+    }
 
     return true;
 }
