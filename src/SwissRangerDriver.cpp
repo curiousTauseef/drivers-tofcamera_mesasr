@@ -4,7 +4,7 @@ using namespace tofcamera_mesa_swissranger;
 
 SwissRangerDriver::SwissRangerDriver()
     : camera_handle_(0), is_open_(false), img_entry_array_(0), img_indexes_(ImgEntry::IT_LAST + 1, -1),
-      timeout_(TIMEOUT), image_buffer_(0)
+      timeout_(TIMEOUT), pointcloud_buffer_(0)
 {
     LOG_DEBUG("SwissRangerDriver: constructor");
 }
@@ -98,10 +98,10 @@ bool SwissRangerDriver::init()
     if (getRows(rows_) != true)
         return false;
 
-    // allocate the buffer with maximal size
+    // allocate the buffer with maximal size to store a pointcloud 
     size_t buffer_size = rows_ * cols_ * 3 * sizeof(double);
-    image_buffer_ = malloc(buffer_size);
-    memset(image_buffer_, 0xaf, buffer_size);
+    pointcloud_buffer_ = malloc(buffer_size);
+    memset(pointcloud_buffer_, 0xaf, buffer_size);
 
     return true;
 }
@@ -110,20 +110,20 @@ bool SwissRangerDriver::initImageList()
 {
     LOG_DEBUG("SwissRangerDriver: initImageList");
 
-    number_of_images_= SR_GetImageList(camera_handle_, &img_entry_array_);
+    num_of_images_= SR_GetImageList(camera_handle_, &img_entry_array_);
 
     // at least 2 images (distance and amplitude) are always available
     // independent of the current acquisition mode
-    if (number_of_images_ < 2 || img_entry_array_ == 0)
+    if (num_of_images_ < 2 || img_entry_array_ == 0)
     {
         LOG_ERROR("SwissRangerDriver: failed to get a list of all available images");
         return false;
     }
 
     // set the index of images according to the available images in the img_entry_array_
-    std::fill (img_indexes_.begin(), img_indexes_.end(), -1);
+    std::fill(img_indexes_.begin(), img_indexes_.end(), -1);
 
-    for (int i = 0; i < number_of_images_; ++i)
+    for (int i = 0; i < num_of_images_; ++i)
     {
         switch (img_entry_array_[i].imgType)
         {
@@ -206,10 +206,10 @@ bool SwissRangerDriver::close()
     timeout_ = TIMEOUT;
     camera_handle_ = 0;
     img_entry_array_ = 0;
-    number_of_images_ = 0;
+    num_of_images_ = 0;
 
-    free(image_buffer_);
-    image_buffer_ = 0;
+    free(pointcloud_buffer_);
+    pointcloud_buffer_ = 0;
 
     LOG_INFO("SwissRangerDriver: the device is closed.");
     return true;
@@ -432,9 +432,20 @@ bool SwissRangerDriver::setDualIntegrationTime(int ratio)
 {
     LOG_DEBUG("SwissRangerDriver: setDualIntegrationTime");
 
+    // check firmware
+    unsigned char fw = SR_GetReg(camera_handle_,46);
+    if (fw < 0x73)
+    {
+        std::stringstream stream;
+        stream << std::hex << (int)fw;
+        std::string message("SwissRangerDriver: DualIntegrationTime is available for the firmware 0x73. Current firmware: " + stream.str());
+        std::cout << message << std::endl;
+        LOG_ERROR(message.c_str());
+        return false;
+    }
+
     int result = SR_SetDualIntegrationTime(camera_handle_, ratio);
 
-    // TODO: check the value
     if (result < 2)
     {
         LOG_ERROR("SwissRangerDriver: could not set the dual integration time. Check the ratio value. It should be from 0 to 100.");
@@ -551,6 +562,10 @@ bool SwissRangerDriver::acquire()
     LOG_DEBUG("SwissRangerDriver: acquire");
 
     int transfered_bytes = SR_Acquire(camera_handle_); //acquire image
+
+    // TODO: check the number of transfered bytes of all images
+    // current state: returned just the number of bytes of two images
+    // even if the confidence map is turned on 
     if (transfered_bytes < 0)
     {
         LOG_ERROR("SwissRangerDriver: the acquisition failed.");
@@ -656,14 +671,14 @@ bool SwissRangerDriver::getPointcloudDouble(std::vector<base::Vector3d> &points)
 
     points.clear();
 
-    if (image_buffer_ == 0)
+    if (pointcloud_buffer_ == 0)
     {
         LOG_ERROR("SwissRangerDriver: failed to get pointcloud double.");
         return false;
     }
 
     int pitch = 3 * sizeof(double);
-    double* buf = (double*) image_buffer_;
+    double* buf = (double*) pointcloud_buffer_;
 
     // transfrom the distance image from spherical coordinates to cartesian coordinates
     // coordinate in meter
@@ -692,14 +707,14 @@ bool SwissRangerDriver::getPointcloudFloat(std::vector<Eigen::Matrix<float, 3, 1
 
     points.clear();
 
-    if (image_buffer_ == 0)
+    if (pointcloud_buffer_ == 0)
     {
         LOG_ERROR("SwissRangerDriver: failed to get pointcloud float.");
         return false;
     }
 
     int pitch = 3 * sizeof(float);
-    float* buf = (float*) image_buffer_;
+    float* buf = (float*) pointcloud_buffer_;
 
     // transfrom the distance image from spherical coordinates to cartesian coordinates
     // coordinate in meter
@@ -728,14 +743,14 @@ bool SwissRangerDriver::getPointcloudShort(std::vector<Eigen::Matrix<short, 3, 1
 
     points.clear();
 
-    if (image_buffer_ == 0)
+    if (pointcloud_buffer_ == 0)
     {
         LOG_ERROR("SwissRangerDriver: failed to get pointcloud short.");
         return false;
     }
 
     int pitch = 2 * sizeof(short) + sizeof(unsigned short);
-    short* buf = (short*) image_buffer_;
+    short* buf = (short*) pointcloud_buffer_;
 
     // transfrom the distance image from spherical coordinates to cartesian coordinates
     // coordinate in mm

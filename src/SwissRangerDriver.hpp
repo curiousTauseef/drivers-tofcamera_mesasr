@@ -155,6 +155,7 @@ namespace tofcamera_mesa_swissranger
              * The ratio is a percentage value from 0 to 100. If 0, the function is turned off.
              * 
              * \note this function is avaliable since the library version 1.14.747
+             *  this function was not tested
              */
             bool setDualIntegrationTime(int ratio);
 
@@ -267,14 +268,14 @@ namespace tofcamera_mesa_swissranger
             std::vector<int> img_indexes_;
 
             /** \short number of available images */
-            int number_of_images_;
+            int num_of_images_;
 
             unsigned int rows_;
             unsigned int cols_;
 
             int timeout_;
 
-            void* image_buffer_;
+            void* pointcloud_buffer_;
 
             /**
              * \short gets the image information from the device

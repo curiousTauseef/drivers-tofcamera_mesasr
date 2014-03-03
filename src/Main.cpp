@@ -51,12 +51,13 @@ int main(int argc, char** argv)
         LOG_INFO("setAcquisitionMode: success");
 
     acquire_mode = AM_COR_FIX_PTRN;
-    result = driver.turnAcquisitionMode(AM_COR_FIX_PTRN, false);
+    result = driver.turnAcquisitionMode(AM_COR_FIX_PTRN, true);
+    //result = driver.turnAcquisitionMode(AM_SW_TRIGGER, false);
     if (result == true)
-        LOG_INFO("turnAcquisitionMode: success");
+       LOG_INFO("turnAcquisitionMode: success");
 
     // --- Timeout
-    driver.setTimeout(4000);
+    driver.setTimeout(3000);
     int timeout = driver.getTimeout();
     LOG_INFO("setTimeout: %d", timeout);
 
@@ -77,7 +78,7 @@ int main(int argc, char** argv)
     if (result == true)
         LOG_INFO("getIntegrationTime: %d", static_cast<int>(integration_time));
 
-    result = driver.setIntegrationTime(5);
+    result = driver.setIntegrationTime(30);
     if (result == true)
         LOG_INFO("setIntegrationTime: success");
 
@@ -104,6 +105,9 @@ int main(int argc, char** argv)
     if (result == true)
         LOG_INFO("setModulationFrequency: success");
 
+    result = driver.setDualIntegrationTime(50);
+    if (result == true)
+        LOG_INFO("setDualIntegrationTime: success");
 
     // ----------------- TEST: acquisition ---------------
     result = driver.acquire();
