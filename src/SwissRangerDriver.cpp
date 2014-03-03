@@ -677,12 +677,11 @@ bool SwissRangerDriver::getPointcloudDouble(std::vector<base::Vector3d> &points)
         return false;
     }
 
-    points.reserve(rows_ * cols_);
+    int num_of_points = rows_ * cols_;
+    int buffer_size = num_of_points * 3;
 
-    for (unsigned int i = 0; i < (rows_ * cols_ * 3); i += 3)
-    {
-        points.push_back(base::Vector3d(buf[i], buf[i+1], buf[i+2]));
-    }
+    points.resize(num_of_points);
+    std::copy(buf, buf + buffer_size, points[0].data());
 
     return true;
 }
@@ -714,12 +713,11 @@ bool SwissRangerDriver::getPointcloudFloat(std::vector<Eigen::Matrix<float, 3, 1
         return false;
     }
 
-    points.reserve(rows_ * cols_);
+    int num_of_points = rows_ * cols_;
+    int buffer_size = num_of_points * 3;
 
-    for (unsigned int i = 0; i < (rows_ * cols_ * 3); i += 3)
-    {
-        points.push_back(Eigen::Matrix<float, 3, 1, Eigen::DontAlign>(buf[i], buf[i+1], buf[i+2]));
-    }
+    points.resize(num_of_points);
+    std::copy(buf, buf + buffer_size, points[0].data());    
 
     return true;
 }
@@ -752,12 +750,11 @@ bool SwissRangerDriver::getPointcloudShort(std::vector<Eigen::Matrix<short, 3, 1
         return false;
     }
 
-    points.reserve(rows_ * cols_);
+    int num_of_points = rows_ * cols_;
+    int buffer_size = num_of_points * 3;
 
-    for (unsigned int i = 0; i < (rows_ * cols_ * 3); i += 3)
-    {
-        points.push_back(Eigen::Matrix<short, 3, 1, Eigen::DontAlign>(buf[i], buf[i+1], (unsigned short)buf[i+2]));
-    }
+    points.resize(num_of_points);
+    std::copy(buf, buf + buffer_size, points[0].data());    
 
     return true;
 }
