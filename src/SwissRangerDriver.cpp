@@ -316,10 +316,10 @@ bool SwissRangerDriver::setAcquisitionMode(int mode)
     std::string modes_str;
     acquireModesToStr(mode, modes_str);
 
-    LOG_INFO("SwissRangerDriver: the acquisition mode was set to %s", modes_str.c_str());
-
     // print the warning if the acquisition mode is only for internal testing
     warnInternalAcquisitionMode(mode);
+
+    LOG_INFO("SwissRangerDriver: the acquisition mode was set to %s", modes_str.c_str());
 
     // update the image buffer pointers:
     // some changes in acqusition mode can result a reallocation of the image buffers,
@@ -463,16 +463,17 @@ bool SwissRangerDriver::getIntegrationTime(unsigned char &time)
 {
     LOG_DEBUG("SwissRangerDriver: getIntegrationTime");
 
-    unsigned char result = SR_GetIntegrationTime(camera_handle_);
-    if ((int)result < 2)
+    if (isOpen())
     {
-        LOG_ERROR("SwissRangerDriver: could not get the integration time.");
+        time = SR_GetIntegrationTime(camera_handle_);
+        return true;
+    }
+    else 
+    {
+        LOG_ERROR("SwissRangerDriver: could not get the integration time. "
+            "The camera is not opened.");
         return false;
     }
-
-    time = result;
-
-    return true;
 }
 
 bool SwissRangerDriver::setDualIntegrationTime(int ratio)
@@ -528,17 +529,17 @@ bool SwissRangerDriver::getAmplitudeThreshold(unsigned short &threshold)
 {
     LOG_DEBUG("SwissRangerDriver: getAmplitudeThreshold");
 
-    unsigned short result = SR_GetAmplitudeThreshold(camera_handle_);
-
-    if (result < 4)
+    if (isOpen())
     {
-        LOG_ERROR("SwissRangerDriver: could not get the amplitude threshold.");
-        return false;
+        threshold = SR_GetAmplitudeThreshold(camera_handle_);
+        return true;
+    } 
+    else
+    {
+        LOG_ERROR("SwissRangerDriver: could not get the amplitude threshold. "
+            "The camera is not opened.");
+        return false;        
     }
-
-    threshold = result;
-
-    return true;
 }
 
 bool SwissRangerDriver::setModulationFrequency(ModulationFrq frequency)
@@ -546,21 +547,26 @@ bool SwissRangerDriver::setModulationFrequency(ModulationFrq frequency)
     LOG_DEBUG("SwissRangerDriver: setModulationFrequency");
 
     int result = SR_SetModulationFrequency(camera_handle_, frequency);
+
+    // TODO: returns always 0, even if the camera is not connected
     if (result < 0)
     {
         LOG_ERROR("SwissRangerDriver: could not set the modulation frequency. "
                   "The supported frequencies depend on the camera type (SR3K/SR4K).");
         return false;
+    } else if (result == 1)
+    {
+        LOG_WARN("SwissRangerDriver: there is no calibration data for this frequency.");
     }
 
     // print the information of modulation frequency
     std::string freq_str;
     modulationFreqToStr(frequency, freq_str);
 
-    LOG_INFO("SwissRangerDriver: the modulation frequency was set to %s", freq_str.c_str());
-
     // print the warning if the modulation frequency is only for internal testing
     warnInternalModulationFrequency(frequency);
+
+    LOG_INFO("SwissRangerDriver: the modulation frequency was set to %s", freq_str.c_str());
 
     return true;
 }
@@ -578,7 +584,8 @@ bool SwissRangerDriver::getModilationFrequency(ModulationFrq &frequency)
     LOG_DEBUG("SwissRangerDriver: getModilationFrequency");
 
     ModulationFrq result = SR_GetModulationFrequency(camera_handle_);
-    if ((int)result < 0)
+
+    if (result >= MF_LAST)
     {
         LOG_ERROR("SwissRangerDriver: could not get the modulation frequency.");
         return false;
