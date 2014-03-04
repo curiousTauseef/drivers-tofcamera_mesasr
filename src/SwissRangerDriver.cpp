@@ -13,8 +13,8 @@ SwissRangerDriver::~SwissRangerDriver()
 {
     LOG_DEBUG("SwissRangerDriver: destructor");
 
-    if (isOpen() == true)
-        close();
+    //if (isOpen() == true)
+    //    close();
 }
 
 bool SwissRangerDriver::openUSB(const unsigned int serial_number)
@@ -24,7 +24,7 @@ bool SwissRangerDriver::openUSB(const unsigned int serial_number)
     // close the device to reset all settings to default
     if (isOpen() == true)
     {
-        LOG_INFO("SwissRangerDriver: the device is already opened. "
+        LOG_WARN("SwissRangerDriver: the device is already opened. "
                  "It will be closed and reopened, therefore all "
                  "settings will be set to default.");
         close();
@@ -58,7 +58,7 @@ bool SwissRangerDriver::openEthernet(const std::string &ip_address)
     // close the device to reset all settings to default
     if (isOpen() == true)
     {
-        LOG_INFO("SwissRangerDriver: the device is already opened. "
+        LOG_WARN("SwissRangerDriver: the device is already opened. "
                  "It will be closed and reopened, therefore all "
                  "settings will be set to default.");
         close();
@@ -87,6 +87,8 @@ bool SwissRangerDriver::openEthernet(const std::string &ip_address)
 
 bool SwissRangerDriver::init()
 {
+    LOG_DEBUG("SwissRangerDriver: init");
+
     // get an array of all avaliable images
     if (initImageList() != true)
         return false;
@@ -165,6 +167,8 @@ bool SwissRangerDriver::initImageList()
         }
     }
 
+    LOG_INFO("SwissRangerDriver: the list of avaliable images is initialized.");
+
     return true;
 }
 
@@ -174,7 +178,7 @@ bool SwissRangerDriver::close()
 
     if (isOpen() == false)
     {
-        LOG_INFO("SwissRangerDriver: the device is already closed.");
+        LOG_WARN("SwissRangerDriver: the device is already closed.");
         return true;
     }
 
@@ -260,6 +264,42 @@ bool SwissRangerDriver::getDeviceInfo(std::string &info)
     return true;
 }
 
+bool SwissRangerDriver::getSerialNumber(unsigned int &number)
+{
+    LOG_DEBUG("SwissRangerDriver: getSerialNumber");
+
+    unsigned int result = SR_ReadSerial(camera_handle_);
+
+    std::cout << "SERIAL NUMBER " << result << std::endl;
+
+    if (result == 0xffffffff)
+    {
+        LOG_ERROR("SwissRangerDriver: serial number is not avaliable. ");
+        return false;
+    }
+
+    number = result;
+
+    return true;
+}
+
+bool SwissRangerDriver::getFirmwareVersion(unsigned int &version)
+{
+    LOG_DEBUG("SwissRangerDriver: getFirmwareVersion");
+
+    unsigned char result = SR_GetReg(camera_handle_, 46);
+
+    if (result == 0xFF)
+    {
+        LOG_ERROR("SwissRangerDriver: firmware information is not avaliable. ");
+        return false;        
+    }
+
+    version = (unsigned int) result;
+
+    return true;
+}
+
 bool SwissRangerDriver::setAcquisitionMode(int mode)
 {
     LOG_DEBUG("SwissRangerDriver: setAcquisitionMode");
@@ -268,13 +308,14 @@ bool SwissRangerDriver::setAcquisitionMode(int mode)
     if (result < 0)
     {
         LOG_ERROR("SwissRangerDriver: the acquisition mode could not be set. "
-                  "The supported acquistion mode depend on the camera type (SR3/SR4).");
+                  "The supported acquisition mode depends on the camera type (SR3K/SR4K).");
         return false;
     }
 
     // print the information of acquisition mode
     std::string modes_str;
     acquireModesToStr(mode, modes_str);
+
     LOG_INFO("SwissRangerDriver: the acquisition mode was set to %s", modes_str.c_str());
 
     // print the warning if the acquisition mode is only for internal testing
@@ -354,6 +395,8 @@ void SwissRangerDriver::setTimeout(int ms)
 
     SR_SetTimeout(camera_handle_, ms);
     timeout_ = ms;
+
+    LOG_INFO("SwissRangerDriver: the timeout was set to %d", timeout_);
 }
 
 int SwissRangerDriver::getTimeout()
@@ -402,12 +445,16 @@ bool SwissRangerDriver::setIntegrationTime(unsigned char time)
 
     int result = SR_SetIntegrationTime(camera_handle_, time);
 
-    // result value indicate the number of bytes transferred to or from the camera during an operation
+    // result value indi1cate the number of bytes transferred to 
+    // or from the camera during an operation
     if (result < 2)
     {
-        LOG_ERROR("SwissRangerDriver: could not set the integration time. Check the time value. It should be from 0 to 255.");
+        LOG_ERROR("SwissRangerDriver: could not set the integration time. " 
+            "Check the time value. It should be from 0 to 255.");
         return false;
     }
+
+    LOG_INFO("SwissRangerDriver: the integration time was set to %d", (int)time);
 
     return true;
 }
@@ -417,7 +464,7 @@ bool SwissRangerDriver::getIntegrationTime(unsigned char &time)
     LOG_DEBUG("SwissRangerDriver: getIntegrationTime");
 
     unsigned char result = SR_GetIntegrationTime(camera_handle_);
-    if (static_cast<int>(result) <= 0)
+    if ((int)result < 2)
     {
         LOG_ERROR("SwissRangerDriver: could not get the integration time.");
         return false;
@@ -438,19 +485,22 @@ bool SwissRangerDriver::setDualIntegrationTime(int ratio)
     {
         std::stringstream stream;
         stream << std::hex << (int)fw;
-        std::string message("SwissRangerDriver: DualIntegrationTime is available for the firmware 0x73. Current firmware: " + stream.str());
-        std::cout << message << std::endl;
-        LOG_ERROR(message.c_str());
+        LOG_ERROR_S << "SwissRangerDriver: DualIntegrationTime is available for the firmware 0x73. "
+                    << "Current firmware: "
+                    << stream.str();
         return false;
     }
 
     int result = SR_SetDualIntegrationTime(camera_handle_, ratio);
 
-    if (result < 2)
+    if (result < 0)
     {
-        LOG_ERROR("SwissRangerDriver: could not set the dual integration time. Check the ratio value. It should be from 0 to 100.");
+        LOG_ERROR("SwissRangerDriver: could not set the dual integration time. "
+            "Check the ratio value. It should be from 0 to 100.");
         return false;
     }
+
+    LOG_INFO("SwissRangerDriver: the dual integration time was set to %d", (int)ratio);
 
     return true;
 }
@@ -461,12 +511,15 @@ bool SwissRangerDriver::setAmplitudeThreshold(unsigned short threshold)
 
     int result = SR_SetAmplitudeThreshold(camera_handle_, threshold);
 
-    // result value indicate the number of bytes transferred to or from the camera during an operation
+    // result value indicate the number of bytes transferred 
+    // to or from the camera during an operation
     if (result < 4)
     {
         LOG_ERROR("SwissRangerDriver: could not set the amplitude threshold.");
         return false;
     }
+
+    LOG_INFO("SwissRangerDriver: the amplitude threshold was set to %d", (int)threshold);
 
     return true;
 }
@@ -476,7 +529,8 @@ bool SwissRangerDriver::getAmplitudeThreshold(unsigned short &threshold)
     LOG_DEBUG("SwissRangerDriver: getAmplitudeThreshold");
 
     unsigned short result = SR_GetAmplitudeThreshold(camera_handle_);
-    if (result < 0)
+
+    if (result < 4)
     {
         LOG_ERROR("SwissRangerDriver: could not get the amplitude threshold.");
         return false;
@@ -495,13 +549,14 @@ bool SwissRangerDriver::setModulationFrequency(ModulationFrq frequency)
     if (result < 0)
     {
         LOG_ERROR("SwissRangerDriver: could not set the modulation frequency. "
-                  "The supported frequencies depend on the camera type (SR3/SR4).");
+                  "The supported frequencies depend on the camera type (SR3K/SR4K).");
         return false;
     }
 
     // print the information of modulation frequency
     std::string freq_str;
     modulationFreqToStr(frequency, freq_str);
+
     LOG_INFO("SwissRangerDriver: the modulation frequency was set to %s", freq_str.c_str());
 
     // print the warning if the modulation frequency is only for internal testing
@@ -523,7 +578,7 @@ bool SwissRangerDriver::getModilationFrequency(ModulationFrq &frequency)
     LOG_DEBUG("SwissRangerDriver: getModilationFrequency");
 
     ModulationFrq result = SR_GetModulationFrequency(camera_handle_);
-    if (static_cast<int>(result) < 0)
+    if ((int)result < 0)
     {
         LOG_ERROR("SwissRangerDriver: could not get the modulation frequency.");
         return false;
@@ -545,6 +600,8 @@ bool SwissRangerDriver::setAutoExposure(unsigned char min_int_time, unsigned cha
         LOG_ERROR("SwissRangerDriver: could not set the auto exposure.");
         return false;
     }
+
+    LOG_INFO("SwissRangerDriver: the auto exposure values were set to %d, %d, %d, %d", (int)min_int_time, (int)max_int_time, (int)percent_over_pos, (int)desired_pos);
 
     return true;
 }
@@ -688,7 +745,8 @@ bool SwissRangerDriver::getPointcloudDouble(std::vector<base::Vector3d> &points)
 
     if (result < 0)
     {
-        LOG_ERROR("SwissRangerDriver: could not transform the distance image to cartesian coordinate with double precision.");
+        LOG_ERROR("SwissRangerDriver: could not transform the distance image to "
+            "cartesian coordinate with double precision.");
         return false;
     }
 
@@ -724,7 +782,8 @@ bool SwissRangerDriver::getPointcloudFloat(std::vector<Eigen::Matrix<float, 3, 1
 
     if (result < 0)
     {
-        LOG_ERROR("SwissRangerDriver: could not transform the distance image to cartesian coordiante with float precision.");
+        LOG_ERROR("SwissRangerDriver: could not transform the distance image to "
+            "cartesian coordiante with float precision.");
         return false;
     }
 
@@ -761,7 +820,8 @@ bool SwissRangerDriver::getPointcloudShort(std::vector<Eigen::Matrix<short, 3, 1
 
     if (result < 0)
     {
-        LOG_ERROR("SwissRangerDriver: could not transform the distance image to cartesian coordiante with short precision.");
+        LOG_ERROR("SwissRangerDriver: could not transform the distance image to "
+            "cartesian coordiante with short precision.");
         return false;
     }
 

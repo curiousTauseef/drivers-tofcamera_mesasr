@@ -82,6 +82,16 @@ namespace tofcamera_mesa_swissranger
             bool getDeviceInfo(std::string &info);
 
             /**
+             * \short Returns the serial number in hex-format
+             */
+            bool getSerialNumber(unsigned int &number);
+
+            /**
+             * \short Returns the version of firmware in hex-format
+             */
+            bool getFirmwareVersion(unsigned int &version);
+
+            /**
              * \short Sets acquisition mode
              * \brief This function overwrites the current acquisition mode.
              * (e.g. default mode for SR4k is AM_COR_FIX_PTRN|AM_CONV_GRAY|AM_DENOISE_ANF

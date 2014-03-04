@@ -19,7 +19,7 @@ int main(int argc, char** argv)
     // open device over USB
     if (driver.openUSB(0) == false) {
         LOG_ERROR("openUSB: error");
-        return false;
+        //return false;
     }
 
     // ----------------- TEST: the properties ---------------
@@ -35,6 +35,18 @@ int main(int argc, char** argv)
     result = driver.getDeviceInfo(device_info);
     if (result == true)
         LOG_INFO("getDeviceInfo: %s", device_info.c_str());
+
+    // --- Serial Number
+    unsigned int serial_number = 0;
+    result = driver.getSerialNumber(serial_number);
+    if (result == true)
+        LOG_INFO("getSerialNumber: %x", serial_number);
+
+    // --- Firmware Version
+    unsigned int firmware_version = 0;
+    result = driver.getFirmwareVersion(firmware_version);
+    if (result == true)
+        LOG_INFO("getFirmwareVersion: %x", firmware_version);
 
     // --- Acquisition Mode
     int acquire_mode = AM_COR_FIX_PTRN;
