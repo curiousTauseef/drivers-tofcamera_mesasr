@@ -179,8 +179,14 @@ namespace tofcamera_mesa_swissranger
             bool setAmplitudeThreshold(unsigned short threshold);
             bool getAmplitudeThreshold(unsigned short &threshold);
 
+            void setConfidenceThreshold(unsigned short threshold);
+            unsigned short getConfidenceThreshold();
+
             bool setModulationFrequency(ModulationFrq frequency);
             bool getModilationFrequency(ModulationFrq &frequency);
+
+            void turnRemoveZeroPoints(bool turn_on);
+            bool isRemoveZeroPoints();
 
             /**
              * \short Sets auto exposure (s. sensor API)
@@ -285,6 +291,10 @@ namespace tofcamera_mesa_swissranger
 
             int timeout_;
 
+            unsigned short confidence_threshold_;
+
+            bool remove_zero_points_;
+
             void* pointcloud_buffer_;
 
             /**
@@ -333,6 +343,67 @@ namespace tofcamera_mesa_swissranger
              * \param[out]
              */
             void removeReservedBits(std::vector<uint16_t> *buffer);
+
+            /**
+             * \short filter out the pointcloud by confidence value
+             * \brief The coordinate of points will be set to zero,
+             * if its cooresponding confidence value is lower than the threshold.
+             * The threshold value is set by setConfidenceThreshold
+             */
+            template<class T>
+            void thresholdByConfidence(std::vector<T> &points) 
+            {
+                LOG_DEBUG("SwissRangerDriver: thresholdByConfidence");
+
+                if (isConfidenceImageAvailable() == false)
+                {
+                    LOG_ERROR("Can not threshold the pointcloud by confidence value, "
+                        "since no confidence image is available. Please set the confidence flag "
+                        "in the acquisition mode.");
+                    return;
+                }
+
+                int image_index = img_indexes_.at(ImgEntry::IT_DISTANCE);
+
+                // get the pointer to the confidence image buffer
+                uint16_t *data_ptr = (uint16_t*) img_entry_array_[image_index].data;
+
+                // the size of image buffer
+                uint32_t data_length = (uint32_t)img_entry_array_[image_index].width
+                                        * (uint32_t)img_entry_array_[image_index].height;    
+
+                if (points.size() != data_length)
+                {
+                    LOG_ERROR("Can not threshold the pointcloud by confidence value, "
+                        " since the size of pointcloud and confidence image are not the same.");
+                    return;       
+                }
+
+                for (unsigned int i = 0; i < data_length; ++i)
+                {
+                    // if the confidence value is lower than the threshold
+                    // set the point to zero coordinate
+                    if (*(data_ptr + i) < confidence_threshold_)
+                    {
+                        points.at(i).x() = 0;
+                        points.at(i).y() = 0;
+                        points.at(i).z() = 0;
+                    }
+                }  
+            }
+
+            /**
+             * \short remove all points with zero coordinates
+             * 
+             */
+            template<class T>
+            void removeZeroPoints(std::vector<T> &points)
+            {
+                LOG_DEBUG("SwissRangerDriver: removeZeroPoints");
+
+                T zero_point(0, 0, 0);
+                points.erase(std::remove(points.begin(), points.end(), zero_point), points.end());   
+            }            
 
 	};
 

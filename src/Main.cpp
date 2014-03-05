@@ -19,7 +19,7 @@ int main(int argc, char** argv)
     // open device over USB
     if (driver.openUSB(0) == false) {
         LOG_ERROR("openUSB: error");
-        //return false;
+        return false;
     }
 
     // ----------------- TEST: the properties ---------------

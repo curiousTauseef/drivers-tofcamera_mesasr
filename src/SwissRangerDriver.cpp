@@ -4,7 +4,7 @@ using namespace tofcamera_mesa_swissranger;
 
 SwissRangerDriver::SwissRangerDriver()
     : camera_handle_(0), is_open_(false), img_entry_array_(0), img_indexes_(ImgEntry::IT_LAST + 1, -1),
-      timeout_(TIMEOUT), pointcloud_buffer_(0)
+      timeout_(TIMEOUT), confidence_threshold_(0), remove_zero_points_(false), pointcloud_buffer_(0)
 {
     LOG_DEBUG("SwissRangerDriver: constructor");
 }
@@ -486,9 +486,12 @@ bool SwissRangerDriver::setDualIntegrationTime(int ratio)
     {
         std::stringstream stream;
         stream << std::hex << (int)fw;
-        LOG_ERROR_S << "SwissRangerDriver: DualIntegrationTime is available for the firmware 0x73. "
-                    << "Current firmware: "
-                    << stream.str();
+        LOG_ERROR_S << "SwissRangerDriver: could not set the dual integration time. "
+                    << "DualIntegrationTime is available for the firmware >= 0x73, "
+                    << "the current firmware is 0x"
+                    << stream.str() << ". "
+                    << "Therefore, the camera is working in single integration mode."
+                    << std::endl;
         return false;
     }
 
@@ -540,6 +543,17 @@ bool SwissRangerDriver::getAmplitudeThreshold(unsigned short &threshold)
             "The camera is not opened.");
         return false;        
     }
+}
+
+void SwissRangerDriver::setConfidenceThreshold(unsigned short threshold)
+{
+    LOG_DEBUG("SwissRangerDriver: setConfidenceThreshold");
+    confidence_threshold_ = threshold;
+}
+
+unsigned short SwissRangerDriver::getConfidenceThreshold()
+{
+    return confidence_threshold_;
 }
 
 bool SwissRangerDriver::setModulationFrequency(ModulationFrq frequency)
@@ -615,7 +629,7 @@ bool SwissRangerDriver::setAutoExposure(unsigned char min_int_time, unsigned cha
 
 bool SwissRangerDriver::isConfidenceImageAvailable()
 {
-    if (img_indexes_.at(ImgEntry::IT_CONF_MAP) == -1)
+    if (img_entry_array_ == 0 || img_indexes_.at(ImgEntry::IT_CONF_MAP) == -1)
         return false;
     else
         return true;
@@ -685,11 +699,8 @@ bool SwissRangerDriver::getConfidenceImage(std::vector<uint16_t> *image)
 {
     LOG_DEBUG("SwissRangerDriver: getConfidenceImage");
 
-    if (img_entry_array_ == 0 || img_indexes_.at(ImgEntry::IT_CONF_MAP) == -1)
-    {
-        LOG_ERROR("SwissRangerDriver: the confidence image is not available");
+    if (isConfidenceImageAvailable() == false)
         return false;
-    }
 
     // get confidence image data from device
     if (getImage(img_indexes_.at(ImgEntry::IT_CONF_MAP), image) == false)
@@ -729,6 +740,16 @@ void SwissRangerDriver::removeReservedBits(std::vector<uint16_t> *buffer)
     }
 }
 
+void SwissRangerDriver::turnRemoveZeroPoints(bool turn_on)
+{
+    remove_zero_points_ = turn_on;
+}
+
+bool SwissRangerDriver::isRemoveZeroPoints()
+{
+    return remove_zero_points_;
+}
+
 bool SwissRangerDriver::getPointcloudDouble(std::vector<base::Vector3d> &points)
 {
     LOG_DEBUG("SwissRangerDriver: getPointcloudDouble");
@@ -762,6 +783,14 @@ bool SwissRangerDriver::getPointcloudDouble(std::vector<base::Vector3d> &points)
 
     points.resize(num_of_points);
     std::copy(buf, buf + buffer_size, points[0].data());
+
+    // filter out by confidence value
+    if (confidence_threshold_ > 0)
+        thresholdByConfidence<base::Vector3d>(points);
+
+    // remove all points with zero coordinates
+    if (isRemoveZeroPoints() == true)
+        removeZeroPoints<base::Vector3d>(points);
 
     return true;
 }
@@ -800,6 +829,14 @@ bool SwissRangerDriver::getPointcloudFloat(std::vector<Eigen::Matrix<float, 3, 1
     points.resize(num_of_points);
     std::copy(buf, buf + buffer_size, points[0].data());    
 
+    // filter out by confidence value
+    if (confidence_threshold_ > 0)
+        thresholdByConfidence<Eigen::Matrix<float, 3, 1, Eigen::DontAlign> >(points);  
+
+    // remove all points with zero coordinates
+    if (isRemoveZeroPoints() == true)
+        removeZeroPoints<Eigen::Matrix<float, 3, 1, Eigen::DontAlign> >(points);          
+
     return true;
 }
 
@@ -836,7 +873,15 @@ bool SwissRangerDriver::getPointcloudShort(std::vector<Eigen::Matrix<short, 3, 1
     int buffer_size = num_of_points * 3;
 
     points.resize(num_of_points);
-    std::copy(buf, buf + buffer_size, points[0].data());    
+    std::copy(buf, buf + buffer_size, points[0].data());  
+
+    // filter out by confidence value
+    if (confidence_threshold_ > 0)
+        thresholdByConfidence<Eigen::Matrix<short, 3, 1, Eigen::DontAlign> >(points);    
+
+    // remove all points with zero coordinates
+    if (isRemoveZeroPoints() == true)
+        removeZeroPoints<Eigen::Matrix<short, 3, 1, Eigen::DontAlign> >(points);     
 
     return true;
 }
