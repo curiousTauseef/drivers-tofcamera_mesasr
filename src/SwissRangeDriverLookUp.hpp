@@ -3,7 +3,7 @@
 
 #include "libMesaSR.h"
 
-namespace tofcamera_mesa_swissranger
+namespace tofcamera_mesasr
 {
 
     inline static void acquireModeToStrList(int mode, std::vector<std::string> &mode_str_list)

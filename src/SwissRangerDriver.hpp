@@ -19,7 +19,7 @@
 
 #define TIMEOUT 3000
 
-namespace tofcamera_mesa_swissranger
+namespace tofcamera_mesasr
 {
 
     /**
@@ -407,6 +407,6 @@ namespace tofcamera_mesa_swissranger
 
 	};
 
-} // end namespace tofcamera_mesa_swissranger
+} // end namespace tofcamera_mesasr
 
 #endif // _SWISSRANGERDRIVER_HPP_

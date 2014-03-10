@@ -1,11 +1,10 @@
 <package>
-  <description brief="The driver for TOF camera Mesa Swissranger">
-  
+  <description brief="The driver for the Mesa SwissRanger TOF camera">
+  Time Of Flight (TOF) camera driver for SwissRanger series (SRxxxx) from Mesa Imaging manufacture
   </description>
   <author>Anna Born/anna.born@dfki.de</author>
-  <license></license>
+  <license>GPL v2 or later</license>
   <url>http://</url>
-  <logo>http://</logo>
   <!--
    To add any dependencies use the depend tag
   <depend package="dummy-dependency-0" />

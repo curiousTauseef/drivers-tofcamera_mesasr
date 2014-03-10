@@ -4,7 +4,7 @@
 #include "SwissRangeDriverLookUp.hpp"
 #include <bitset>
 
-using namespace tofcamera_mesa_swissranger;
+using namespace tofcamera_mesasr;
 
 void printPointCloud(std::vector<base::Vector3d> &point_d,
                      std::vector<Eigen::Matrix<float, 3, 1, Eigen::DontAlign> > &points_f,

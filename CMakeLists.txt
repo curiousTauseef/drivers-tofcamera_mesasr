@@ -57,5 +57,5 @@ if (${MESASR_LIBRARY_LAST} MATCHES "MESASR_LIBRARY_LAST-NOTFOUND")
 
 endif ()
 
-rock_init(tofcamera_mesa_swissranger 0.1)
+rock_init(tofcamera_mesasr 0.1)
 rock_standard_layout()

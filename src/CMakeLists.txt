@@ -5,9 +5,9 @@ rock_library(${PROJECT_NAME}
     DEPS_PKGCONFIG base-types base-lib)
 target_link_libraries(${PROJECT_NAME} mesasr)
 
-rock_executable(tofcamera_mesa_swissranger_bin Main.cpp
+rock_executable(tofcamera_mesasr_bin Main.cpp
     DEPS ${PROJECT_NAME})
-target_link_libraries(tofcamera_mesa_swissranger_bin ${PROJECT_NAME} mesasr)
+target_link_libraries(tofcamera_mesasr_bin ${PROJECT_NAME} mesasr)
 
 
 

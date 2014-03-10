@@ -1,6 +1,6 @@
 #include "SwissRangerDriver.hpp"
 
-using namespace tofcamera_mesa_swissranger;
+using namespace tofcamera_mesasr;
 
 SwissRangerDriver::SwissRangerDriver()
     : camera_handle_(0), is_open_(false), img_entry_array_(0), img_indexes_(ImgEntry::IT_LAST + 1, -1),

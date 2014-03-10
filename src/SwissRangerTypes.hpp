@@ -6,9 +6,9 @@
 
 #include "libMesaSR.h"
 
-namespace tofcamera_mesa_swissranger
+namespace tofcamera_mesasr
 {
     typedef enum ModulationFrq TMS_ModulationFrq;
-} // end namespace tofcamera_mesa_swissranger
+} // end namespace tofcamera_mesasr
 
 #endif // SWISSRANGERTYPES_HPP
