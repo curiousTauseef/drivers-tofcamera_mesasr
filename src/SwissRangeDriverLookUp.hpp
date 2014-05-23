@@ -1,7 +1,7 @@
 #ifndef _SWISSRANGERDRIVERLOOKUP_HPP_
 #define _SWISSRANGERDRIVERLOOKUP_HPP_
 
-#include "libMesaSR.h"
+#include <libMesaSR.h>
 
 namespace tofcamera_mesasr
 {

@@ -1,10 +1,11 @@
 #ifndef SWISSRANGERTYPES_HPP
 #define SWISSRANGERTYPES_HPP
 
-#include <base/time.h>
 #include <vector>
 
-#include "libMesaSR.h"
+#include <base/time.h>
+
+#include <libMesaSR.h>
 
 namespace tofcamera_mesasr
 {

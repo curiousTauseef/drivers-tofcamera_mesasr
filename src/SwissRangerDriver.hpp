@@ -6,16 +6,17 @@
 #include <stdexcept>
 #include <vector>
 #include <algorithm>
-#include <base/logging.h>
+
 #include <boost/lexical_cast.hpp>
 #include <boost/range.hpp>
 
+#include <base/logging.h>
 #include <base/eigen.h>
 
-#include "libMesaSR.h"
+#include <libMesaSR.h>
 
-#include "SwissRangeDriverLookUp.hpp"
-#include "SwissRangerTypes.hpp"
+#include <tofcamera_mesasr/SwissRangeDriverLookUp.hpp>
+#include <tofcamera_mesasr/SwissRangerTypes.hpp>
 
 #define TIMEOUT 3000
 
