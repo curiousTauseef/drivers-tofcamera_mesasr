@@ -6,7 +6,7 @@ The following steps are required each time when you connect the camera to your p
 1. connect the swissranger with the usb cabel
 2. run lsusb comman in the terminal; this will give you a list of all usb devices
 3. find the Bus und Device number with the ID 1ad2:0075 (f.e. Bus 003 Device 002: ID 1ad2:0075 )
-4. give the 777 right to the swissranger camera (f.e. sudo chmod 777 /dev/bus/usb/001/002, where 001 - Bus number and 002 - Device number)
+4. give the 777 right to the swissranger camera (f.e. sudo chmod 777 /dev/bus/usb/003/002, where 003 - Bus number and 002 - Device number)
 
 
 
