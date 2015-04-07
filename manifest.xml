@@ -3,6 +3,7 @@
   Time Of Flight (TOF) camera driver for SwissRanger series (SRxxxx) from Mesa Imaging manufacture
   </description>
   <author>Anna Born/anna.born@dfki.de</author>
+  <maintainer>Anna Born/anna.born@dfki.de</maintainer>
   <license>GPL v2 or later</license>
   <url>http://</url>
   <!--
