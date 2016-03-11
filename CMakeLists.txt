@@ -43,12 +43,14 @@ if (${MESASR_LIBRARY_LAST} MATCHES "MESASR_LIBRARY_LAST-NOTFOUND")
 
     ### 32 bit
     if (${CMAKE_SIZEOF_VOID_P} MATCHES 4)
-        execute_process(WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/external COMMAND wget http://www.mesa-imaging.ch/dlm.php?fname=./customer/driver/libmesasr-dev-1.0.14-747.i386.deb --user-agent="" --output-document=libmesasr-dev-1.0.14-747.i386.deb)
+        execute_process(WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/external COMMAND
+            wget downloads.mesa-imaging.ch/dlm.php?fname=./customer/driver/libmesasr-dev-1.0.14-747.i386.debb --user-agent="" --output-document=libmesasr-dev-1.0.14-747.i386.deb)
         execute_process(WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/external COMMAND sudo dpkg -i libmesasr-dev-1.0.14-747.i386.deb)
         execute_process(COMMAND sudo dpkg --configure -a)
     ### 64 bit
     elseif (${CMAKE_SIZEOF_VOID_P} MATCHES 8)
-        execute_process(WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/external COMMAND wget http://www.mesa-imaging.ch/dlm.php?fname=./customer/driver/libmesasr-dev-1.0.14-748.amd64.deb --user-agent="" --output-document=libmesasr-dev-1.0.14-748.amd64.deb)
+        execute_process(WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/external COMMAND
+            wget downloads.mesa-imaging.ch/dlm.php?fname=./customer/driver/libmesasr-dev-1.0.14-748.amd64.deb --user-agent="" --output-document=libmesasr-dev-1.0.14-748.amd64.deb)
         execute_process(WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/external COMMAND sudo dpkg -i libmesasr-dev-1.0.14-748.amd64.deb)
         execute_process(COMMAND sudo dpkg --configure -a)
     else ()
