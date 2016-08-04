@@ -1,7 +1,7 @@
 #include <iostream>
 #include <bitset>
 
-#include <base/logging.h>
+#include <base-logging/Logging.hpp>
 
 #include <tofcamera_mesasr/SwissRangerDriver.hpp>
 #include <tofcamera_mesasr/SwissRangeDriverLookUp.hpp>

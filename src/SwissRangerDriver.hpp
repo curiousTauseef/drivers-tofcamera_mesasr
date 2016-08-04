@@ -10,8 +10,8 @@
 #include <boost/lexical_cast.hpp>
 #include <boost/range.hpp>
 
-#include <base/logging.h>
-#include <base/eigen.h>
+#include <base-logging/Logging.hpp>
+#include <base/Eigen.hpp>
 
 #include <libMesaSR.h>
 
