@@ -2,7 +2,11 @@
 rock_library(${PROJECT_NAME}
     SOURCES SwissRangerDriver.cpp
     HEADERS SwissRangerDriver.hpp SwissRangeDriverLookUp.hpp SwissRangerTypes.hpp
-    DEPS_PKGCONFIG base-types base-lib)
+    DEPS_PKGCONFIG 
+        base-types 
+	base-lib
+	base-logging
+)
 target_link_libraries(${PROJECT_NAME} mesasr)
 
 rock_executable(tofcamera_mesasr_bin Main.cpp
