@@ -50,7 +50,7 @@ if (${MESASR_LIBRARY_LAST} MATCHES "MESASR_LIBRARY_LAST-NOTFOUND")
     ### 64 bit
     elseif (${CMAKE_SIZEOF_VOID_P} MATCHES 8)
         execute_process(WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/external COMMAND
-            wget downloads.mesa-imaging.ch/dlm.php?fname=./customer/driver/libmesasr-dev-1.0.14-748.amd64.deb --user-agent="" --output-document=libmesasr-dev-1.0.14-748.amd64.deb)
+            wget https://robotics.estec.esa.int/owncloud/index.php/s/ZknWYuynxy3Q4WJ/download --user-agent="" --output-document=libmesasr-dev-1.0.14-748.amd64.deb)
         execute_process(WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/external COMMAND sudo dpkg -i libmesasr-dev-1.0.14-748.amd64.deb)
         execute_process(COMMAND sudo dpkg --configure -a)
     else ()
